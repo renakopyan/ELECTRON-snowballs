@@ -1,0 +1,51 @@
+{
+  "name": "snowapp",
+  "version": "3.1.0",
+  "description": "Снег поверх рабочего стола (Mac/Windows) на Electron + TypeScript",
+  "private": true,
+  "main": "dist/main/main.js",
+  "scripts": {
+    "build": "tsc && node scripts/build-native.js",
+    "start": "npm run build && electron .",
+    "watch": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc && node --test \"test/*.test.js\"",
+    "dist": "npm run build && electron-builder",
+    "clean": "node -e \"for (const d of ['dist','bin','release']) require('fs').rmSync(d,{recursive:true,force:true})\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "electron": "^33.0.0",
+    "electron-builder": "^26.0.12",
+    "typescript": "^5.6.0"
+  },
+  "build": {
+    "appId": "local.snowapp",
+    "productName": "Snow",
+    "files": [
+      "dist/**/*",
+      "!dist/**/*.map",
+      "index.html",
+      "bin/**/*"
+    ],
+    "asarUnpack": [
+      "bin/**/*"
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "mac": {
+      "target": "dir",
+      "icon": "build/icon.png",
+      "category": "public.app-category.entertainment",
+      "extendInfo": {
+        "LSUIElement": true
+      }
+    },
+    "win": {
+      "target": "portable",
+      "icon": "build/icon.png"
+    }
+  }
+}
