@@ -3,15 +3,15 @@
 // к шару побольше, встаёт на него сверху — два-три шара дают снеговика.
 // Если толкнуть шар резким рывком, он летит и разбивается о край окна или экрана.
 
-const BALL_SEED_AREA = 45;     // сколько снега надо смести, чтобы появился шар, px²
-const BALL_FLUFF = 1.6;        // шар рыхлее слежавшегося сугроба и потому крупнее
-const BALL_PUSH_GAP = 8;       // расстояние между курсором и шаром, который он толкает
+const BALL_SEED_AREA = 45; // сколько снега надо смести, чтобы появился шар, px²
+const BALL_FLUFF = 1.6; // шар рыхлее слежавшегося сугроба и потому крупнее
+const BALL_PUSH_GAP = 8; // расстояние между курсором и шаром, который он толкает
 const BALL_STACK_OVERLAP = 0.75;
 const MAX_STACK = 3;
 const MAX_PILES_PER_DRIFT = 6; // чтобы кромка не превращалась в россыпь шаров
-const MIN_BALL_AREA = 15;      // мельче — шар растаял
+const MIN_BALL_AREA = 15; // мельче — шар растаял
 
-const BALL_GRAVITY = 0.45;     // px за кадр²
+const BALL_GRAVITY = 0.45; // px за кадр²
 const MAX_THROW_SPEED = 28;
 const MAX_FLIGHT_FRAMES = 360;
 const SPLAT_LIFETIME_FRAMES = 110;
@@ -21,15 +21,15 @@ type PokeKind = 'hop' | 'head' | 'throw';
 const POKE_FRAMES: Record<PokeKind, number> = { hop: 46, head: 40, throw: 28 };
 const POKE_HEIGHT: Record<PokeKind, number> = { hop: 30, head: 46, throw: 12 };
 const POKE_KINDS: PokeKind[] = ['hop', 'head', 'throw'];
-const SNOWMAN_HIT_MARGIN = 5;  // на сколько пикселей вокруг снеговика курсор уже считается «на нём»
+const SNOWMAN_HIT_MARGIN = 5; // на сколько пикселей вокруг снеговика курсор уже считается «на нём»
 const SNOWMAN_THROW_SHARE = 0.1;
 const SNOWMAN_MIN_THROW_AREA = 10;
 
 /** Шар или стопка шаров (снизу вверх), стоящая на кромке */
 interface SnowPile {
   driftId: string;
-  offset: number;   // положение относительно левого края кромки — едет вместе с окном
-  areas: number[];  // количество снега в каждом шаре, снизу вверх
+  offset: number; // положение относительно левого края кромки — едет вместе с окном
+  areas: number[]; // количество снега в каждом шаре, снизу вверх
   poke?: { kind: PokeKind; age: number }; // идёт анимация после клика
 }
 
@@ -369,9 +369,7 @@ class Snowballs {
       if (!drift) continue;
       const px = drift.left + pile.offset;
       if (!drift.isVisibleAt(clamp(px, drift.left, drift.right - 1))) continue;
-      const hit = this.layout(pile, drift).some(
-        ({ y: cy, r }) => Math.hypot(x - px, y - cy) <= r + SNOWMAN_HIT_MARGIN,
-      );
+      const hit = this.layout(pile, drift).some(({ y: cy, r }) => Math.hypot(x - px, y - cy) <= r + SNOWMAN_HIT_MARGIN);
       if (hit) return pile;
     }
     return null;
@@ -440,9 +438,10 @@ class Snowballs {
       const after = poke.age / total;
 
       const drift = drifts.get(pile.driftId);
-      const landed = poke.kind === 'hop' ? (before < 0.5 && after >= 0.5) || (before < 1 && after >= 1) : before < 1 && after >= 1;
+      const landed =
+        poke.kind === 'hop' ? (before < 0.5 && after >= 0.5) || (before < 1 && after >= 1) : before < 1 && after >= 1;
       if (landed && drift) this.puff(drift.left + pile.offset, drift.top, 3);
-      if (after >= 1) pile.poke = undefined;
+      if (after >= 1) delete pile.poke;
     }
   }
 

@@ -29,7 +29,18 @@ function makeStarSprite(variant: number): HTMLCanvasElement {
 
     // Веточки: [где на луче, длина]
     const branches: Array<[number, number]> =
-      variant === 0 ? [[0.45, 10], [0.72, 7]] : variant === 1 ? [[0.6, 12]] : [[0.35, 6], [0.55, 9], [0.78, 6]];
+      variant === 0
+        ? [
+            [0.45, 10],
+            [0.72, 7],
+          ]
+        : variant === 1
+          ? [[0.6, 12]]
+          : [
+              [0.35, 6],
+              [0.55, 9],
+              [0.78, 6],
+            ];
     for (const [at, length] of branches) {
       const bx = cos * arm * at;
       const by = sin * arm * at;
@@ -98,7 +109,12 @@ class Frost {
 
     // В углах инея больше всего
     const cornerRadius = Math.min(width, height) * 0.3;
-    for (const [cx, cy] of [[0, 0], [width, 0], [0, height], [width, height]]) {
+    for (const [cx, cy] of [
+      [0, 0],
+      [width, 0],
+      [0, height],
+      [width, height],
+    ]) {
       const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, cornerRadius);
       gradient.addColorStop(0, 'rgba(235, 244, 255, 0.55)');
       gradient.addColorStop(1, clear);
@@ -134,16 +150,24 @@ class Frost {
       return [x, y, angle, rand(24, 70)];
     }
     switch (Math.floor(rand(0, 4))) {
-      case 0: return [0, rand(0, height), rand(-0.6, 0.6), rand(12, 40)];
-      case 1: return [width, rand(0, height), Math.PI + rand(-0.6, 0.6), rand(12, 40)];
-      case 2: return [rand(0, width), height, -Math.PI / 2 + rand(-0.6, 0.6), rand(12, 40)];
-      default: return [rand(0, width), 0, Math.PI / 2 + rand(-0.6, 0.6), rand(6, 18)];
+      case 0:
+        return [0, rand(0, height), rand(-0.6, 0.6), rand(12, 40)];
+      case 1:
+        return [width, rand(0, height), Math.PI + rand(-0.6, 0.6), rand(12, 40)];
+      case 2:
+        return [rand(0, width), height, -Math.PI / 2 + rand(-0.6, 0.6), rand(12, 40)];
+      default:
+        return [rand(0, width), 0, Math.PI / 2 + rand(-0.6, 0.6), rand(6, 18)];
     }
   }
 
   private static branch(
     ctx: CanvasRenderingContext2D,
-    x: number, y: number, angle: number, length: number, depth: number,
+    x: number,
+    y: number,
+    angle: number,
+    length: number,
+    depth: number,
   ): void {
     const endX = x + Math.cos(angle) * length;
     const endY = y + Math.sin(angle) * length;
@@ -159,9 +183,9 @@ class Frost {
   }
 }
 
-const GARLAND_SPAN = 150;     // расстояние между точками крепления, px
-const GARLAND_SAG = 16;       // насколько провисает провод
-const GARLAND_STEP = 30;      // расстояние между лампочками
+const GARLAND_SPAN = 150; // расстояние между точками крепления, px
+const GARLAND_SAG = 16; // насколько провисает провод
+const GARLAND_STEP = 30; // расстояние между лампочками
 const GARLAND_PATTERN_SECONDS = 10;
 
 /** Цвет с прозрачностью из #rrggbb */
@@ -197,8 +221,10 @@ class Garland {
   static brightness(index: number, time: number): number {
     const pattern = Math.floor(time / GARLAND_PATTERN_SECONDS) % 3;
     let value: number;
-    if (pattern === 0) value = 0.5 + 0.5 * Math.sin(time * 3 - index * 0.6);         // бегущая волна
-    else if (pattern === 1) value = (Math.floor(time * 1.5) + index) % 2 ? 1 : 0;   // через одну
+    if (pattern === 0)
+      value = 0.5 + 0.5 * Math.sin(time * 3 - index * 0.6); // бегущая волна
+    else if (pattern === 1)
+      value = (Math.floor(time * 1.5) + index) % 2 ? 1 : 0; // через одну
     else value = 0.5 + 0.5 * Math.sin(time * (1.3 + ((index * 7919) % 13) / 7) + index); // мерцание
     return 0.25 + 0.75 * value;
   }

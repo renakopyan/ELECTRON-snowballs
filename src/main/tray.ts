@@ -19,15 +19,11 @@ export interface TrayHandlers {
   toggleShortcut: string;
 }
 
-const ICON_SIZE = 32;  // физические пиксели; при scaleFactor 2 это 16pt
+const ICON_SIZE = 32; // физические пиксели; при scaleFactor 2 это 16pt
 const ICON_SCALE = 2;
 
 /** Расстояние от точки до отрезка */
-function distanceToSegment(
-  px: number, py: number,
-  ax: number, ay: number,
-  bx: number, by: number,
-): number {
+function distanceToSegment(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
   const dx = bx - ax;
   const dy = by - ay;
   const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)));
@@ -69,9 +65,7 @@ export function renderSnowflakeBitmap(size: number, shade: number): Buffer {
   const pixel = Buffer.from([shade, shade, shade, 255]);
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
-      const filled = segments.some(
-        ([ax, ay, bx, by]) => distanceToSegment(x, y, ax, ay, bx, by) <= halfThickness,
-      );
+      const filled = segments.some(([ax, ay, bx, by]) => distanceToSegment(x, y, ax, ay, bx, by) <= halfThickness);
       if (filled) pixel.copy(bitmap, (y * size + x) * 4);
     }
   }

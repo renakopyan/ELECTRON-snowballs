@@ -1,12 +1,12 @@
 // Сугроб на одной кромке (верх окна, Dock или низ экрана).
 // Хранится как карта высот: по одному значению на столбик шириной DRIFT_COLUMN.
 
-const DRIFT_COLUMN = 3;                 // ширина столбика, px
-const DRIFT_MAX_SLOPE = 2.4;            // максимальный перепад высот соседних столбиков, px
-const DRIFT_RELAX_FRAMES = 12;          // сколько кадров снег «осыпается» после изменения
-const THIN_GROUND_HEIGHT = 12;          // полоска под Dock на macOS
-const SHAKE_STEP = 5;                   // на сколько столбиков приходится один комок при встряске
-const COLLAPSE_STEP = 4;                // на сколько столбиков приходится один комок при обрушении
+const DRIFT_COLUMN = 3; // ширина столбика, px
+const DRIFT_MAX_SLOPE = 2.4; // максимальный перепад высот соседних столбиков, px
+const DRIFT_RELAX_FRAMES = 12; // сколько кадров снег «осыпается» после изменения
+const THIN_GROUND_HEIGHT = 12; // полоска под Dock на macOS
+const SHAKE_STEP = 5; // на сколько столбиков приходится один комок при встряске
+const COLLAPSE_STEP = 4; // на сколько столбиков приходится один комок при обрушении
 
 /** Кусок снега, отделившийся от сугроба */
 interface SnowChunk {
@@ -21,7 +21,10 @@ class Drift {
   // Случайные фазы «волн», чтобы у каждого сугроба был свой неровный верх
   private readonly wavePhases = [rand(0, Math.PI * 2), rand(0, Math.PI * 2)];
 
-  constructor(private surface: SnowSurface, private readonly config: SnowConfig) {
+  constructor(
+    private surface: SnowSurface,
+    private readonly config: SnowConfig,
+  ) {
     this.heights = new Float32Array(Drift.columnCount(surface));
   }
 
@@ -32,9 +35,12 @@ class Drift {
   private get maxHeight(): number {
     switch (this.surface.kind) {
       case 'window':
-      case 'dock': return this.config.windowDriftHeight;
-      case 'ground': return this.config.groundDriftHeight;
-      case 'ground-thin': return Math.min(THIN_GROUND_HEIGHT, this.config.groundDriftHeight);
+      case 'dock':
+        return this.config.windowDriftHeight;
+      case 'ground':
+        return this.config.groundDriftHeight;
+      case 'ground-thin':
+        return Math.min(THIN_GROUND_HEIGHT, this.config.groundDriftHeight);
     }
   }
 
@@ -310,8 +316,14 @@ class Drift {
         h[j] += excess / 2;
       }
     };
-    for (let i = 0; i < last; i++) { settle(i, i + 1); settle(i + 1, i); }
-    for (let i = last; i > 0; i--) { settle(i, i - 1); settle(i - 1, i); }
+    for (let i = 0; i < last; i++) {
+      settle(i, i + 1);
+      settle(i + 1, i);
+    }
+    for (let i = last; i > 0; i--) {
+      settle(i, i - 1);
+      settle(i - 1, i);
+    }
 
     if (h[0] > DRIFT_MAX_SLOPE) h[0] -= (h[0] - DRIFT_MAX_SLOPE) / 2;
     if (h[last] > DRIFT_MAX_SLOPE) h[last] -= (h[last] - DRIFT_MAX_SLOPE) / 2;

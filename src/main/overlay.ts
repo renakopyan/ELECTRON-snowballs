@@ -34,11 +34,11 @@ export class OverlayManager {
     }
   });
   private snapshot: ScreenSnapshot = { windows: [], dock: null, hidden: [] };
-  private snowing = true;              // пауза из меню или по горячей клавише
+  private snowing = true; // пауза из меню или по горячей клавише
   private pausedAt: number | null = null;
-  private locked = false;              // экран заблокирован
+  private locked = false; // экран заблокирован
   private frameRate = 0;
-  private settling = false;            // листают рабочие столы — на это время снег рисуем реже
+  private settling = false; // листают рабочие столы — на это время снег рисуем реже
 
   constructor(private settings: SnowSettings) {}
 
@@ -144,11 +144,11 @@ export class OverlayManager {
       ...display.bounds,
       show: false,
       transparent: true, // прозрачный фон
-      frame: false,      // без рамки и заголовка
+      frame: false, // без рамки и заголовка
       hasShadow: false,
       alwaysOnTop: true, // поверх всех окон
       skipTaskbar: true, // не показывать в Dock / панели задач
-      focusable: false,  // окно не перехватывает фокус
+      focusable: false, // окно не перехватывает фокус
       resizable: false,
       movable: false,
       enableLargerThanScreen: true,
@@ -219,8 +219,7 @@ export class OverlayManager {
     if (!overlay.ready || overlay.win.isDestroyed()) return;
 
     const inFullscreen =
-      this.settings.hideInFullscreen &&
-      isCoveredByFullscreenWindow(overlay.display.bounds, this.snapshot.windows);
+      this.settings.hideInFullscreen && isCoveredByFullscreenWindow(overlay.display.bounds, this.snapshot.windows);
     const shouldShow = this.snowing && !this.locked && !inFullscreen;
     if (shouldShow === overlay.shown) return;
 

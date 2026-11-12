@@ -140,7 +140,6 @@ interface Helper {
   toDip: (rect: ScreenRect) => ScreenRect;
 }
 
-
 const JXA_HELPER: Helper = {
   command: 'osascript',
   args: ['-l', 'JavaScript', '-e', JXA_SCRIPT],
@@ -152,9 +151,7 @@ const EMPTY_SNAPSHOT: ScreenSnapshot = { windows: [], dock: null, hidden: [] };
 function pickHelper(): Helper | null {
   if (process.platform === 'darwin') {
     // В собранном приложении бинарник лежит рядом с app.asar, а не внутри него
-    const binary = path
-      .join(app.getAppPath(), 'bin', 'window-tracker')
-      .replace('app.asar', 'app.asar.unpacked');
+    const binary = path.join(app.getAppPath(), 'bin', 'window-tracker').replace('app.asar', 'app.asar.unpacked');
     if (fs.existsSync(binary)) return { command: binary, args: [], toDip: identity };
     return JXA_HELPER;
   }
@@ -164,8 +161,12 @@ function pickHelper(): Helper | null {
     return {
       command: 'powershell.exe',
       args: [
-        '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
-        '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64'),
+        '-NoProfile',
+        '-NonInteractive',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-EncodedCommand',
+        Buffer.from(script, 'utf16le').toString('base64'),
       ],
       toDip: (rect) => screen.screenToDipRect(null, rect),
     };

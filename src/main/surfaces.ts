@@ -2,13 +2,13 @@
 
 type Range = [number, number];
 
-const CORNER_INSET = 8;        // не кладём снег на скруглённые углы окна
-const MIN_WINDOW_WIDTH = 120;  // мелкие служебные окна пропускаем
+const CORNER_INSET = 8; // не кладём снег на скруглённые углы окна
+const MIN_WINDOW_WIDTH = 120; // мелкие служебные окна пропускаем
 const MIN_WINDOW_HEIGHT = 60;
-const MIN_VISIBLE_WIDTH = 10;  // слишком узкие просветы между окнами не считаем
-const TOP_MARGIN = 24;         // окно под самым верхом экрана: сугробу негде лежать
-const DOCK_INSET = 12;         // скруглённые края Dock
-const DOCK_GAP = 6;            // зазор между Dock и сугробом на «земле»
+const MIN_VISIBLE_WIDTH = 10; // слишком узкие просветы между окнами не считаем
+const TOP_MARGIN = 24; // окно под самым верхом экрана: сугробу негде лежать
+const DOCK_INSET = 12; // скруглённые края Dock
+const DOCK_GAP = 6; // зазор между Dock и сугробом на «земле»
 
 function subtract(ranges: Range[], cut: Range): Range[] {
   const result: Range[] = [];
@@ -63,9 +63,7 @@ export function computeSurfaces(
     for (const win of inFront) {
       if (coversLine(win, y)) ranges = subtract(ranges, [win.x, win.x + win.width]);
     }
-    return ranges
-      .filter(([a, b]) => b - a >= MIN_VISIBLE_WIDTH)
-      .map(([a, b]): Range => [a - left, b - left]);
+    return ranges.filter(([a, b]) => b - a >= MIN_VISIBLE_WIDTH).map(([a, b]): Range => [a - left, b - left]);
   };
 
   const surfaces: SnowSurface[] = [];

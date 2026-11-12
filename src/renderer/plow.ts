@@ -2,15 +2,15 @@
 // снег с нижнего сугроба, разбивает снеговиков на своём пути и уезжает за край.
 // Выезжает сама, когда внизу намело (если включено в меню), или по команде из трея.
 
-const PLOW_SPEED = 2.6;            // px за кадр при 60 FPS
-const PLOW_LENGTH = 104;           // от кончика отвала до заднего борта, px
-const PLOW_BACK = 14;              // сколько снега за отвалом подбирается заново, px
-const PLOW_PILE_SCALE = 0.5;       // куча перед отвалом — не выше самого отвала
-const PLOW_AUTO_FILL = 0.4;        // с какой заполненности нижнего сугроба машина выезжает сама (0..1)
-const PLOW_COOLDOWN_SECONDS = 90;  // не чаще, чем раз в столько секунд
-const PLOW_CHECK_SECONDS = 2;      // как часто смотрим, не пора ли выезжать
+const PLOW_SPEED = 2.6; // px за кадр при 60 FPS
+const PLOW_LENGTH = 104; // от кончика отвала до заднего борта, px
+const PLOW_BACK = 14; // сколько снега за отвалом подбирается заново, px
+const PLOW_PILE_SCALE = 0.5; // куча перед отвалом — не выше самого отвала
+const PLOW_AUTO_FILL = 0.4; // с какой заполненности нижнего сугроба машина выезжает сама (0..1)
+const PLOW_COOLDOWN_SECONDS = 90; // не чаще, чем раз в столько секунд
+const PLOW_CHECK_SECONDS = 2; // как часто смотрим, не пора ли выезжать
 const PLOW_WHEEL_RADIUS = 10;
-const PLOW_SPRAY_AREA = 120;       // сколько снега уходит в один летящий комок, px²
+const PLOW_SPRAY_AREA = 120; // сколько снега уходит в один летящий комок, px²
 
 /** Всё, с чем машина взаимодействует */
 interface PlowWorld {
@@ -26,10 +26,10 @@ interface PlowWorld {
 
 class Plow {
   private active = false;
-  private bladeX = 0;       // кончик отвала
-  private direction = 1;    // 1 — едет вправо, -1 — влево
-  private wheel = 0;        // угол поворота колёс
-  private cooldown = 0;     // секунд до следующего автоматического выезда
+  private bladeX = 0; // кончик отвала
+  private direction = 1; // 1 — едет вправо, -1 — влево
+  private wheel = 0; // угол поворота колёс
+  private cooldown = 0; // секунд до следующего автоматического выезда
   private checkTimer = 0;
 
   get running(): boolean {
@@ -96,7 +96,12 @@ class Plow {
 
     // Выхлоп из задней части машины
     if (Math.random() < 0.2 * frames) {
-      world.dust(this.bladeX - dir * (PLOW_LENGTH - 4), world.drift ? world.drift.top - 12 : 0, -dir * rand(0.3, 1.1), -rand(0.4, 1.0));
+      world.dust(
+        this.bladeX - dir * (PLOW_LENGTH - 4),
+        world.drift ? world.drift.top - 12 : 0,
+        -dir * rand(0.3, 1.1),
+        -rand(0.4, 1.0),
+      );
     }
 
     const gone = dir > 0 ? this.bladeX - PLOW_LENGTH > world.width + 10 : this.bladeX + PLOW_LENGTH < -10;

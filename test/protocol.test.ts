@@ -1,7 +1,8 @@
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { parseSnapshot } = require('../dist/main/snapshot.js');
-const { sanitizeSettings, DEFAULT_SETTINGS } = require('../dist/main/settings-schema.js');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { parseSnapshot } from '../src/main/snapshot';
+import { DEFAULT_SETTINGS, sanitizeSettings } from '../src/main/settings-schema';
+import { must } from './helpers/must';
 
 test('строка помощника разбирается целиком', () => {
   const snapshot = parseSnapshot('{"w":[[1,10,20,300,200]],"d":[400,835,640,60],"h":[5,6]}');
@@ -17,18 +18,18 @@ test('старый формат без h и битые строки не рон�
   assert.equal(parseSnapshot('мусор'), null);
   assert.equal(parseSnapshot('{"d":null}'), null);
   // Строки с неверным числом полей отбрасываются
-  assert.equal(parseSnapshot('{"w":[[1,2,3]],"d":[1,2],"h":["x"]}').windows.length, 0);
+  assert.equal(must(parseSnapshot('{"w":[[1,2,3]],"d":[1,2],"h":["x"]}')).windows.length, 0);
 });
 
 test('флаг s означает, что набор окон меняется', () => {
-  const snapshot = parseSnapshot('{"w":[],"d":null,"h":[],"s":1}');
+  const snapshot = must(parseSnapshot('{"w":[],"d":null,"h":[],"s":1}'));
   assert.equal(snapshot.settling, true);
-  assert.equal('settling' in parseSnapshot('{"w":[],"d":null,"h":[]}'), false);
+  assert.equal('settling' in must(parseSnapshot('{"w":[],"d":null,"h":[]}')), false);
 });
 
 test('координаты переводятся через toDip (масштаб экрана в Windows)', () => {
-  const half = (r) => ({ x: r.x / 2, y: r.y / 2, width: r.width / 2, height: r.height / 2 });
-  const snapshot = parseSnapshot('{"w":[[1,100,200,600,400]],"d":null,"h":[]}', half);
+  const half = (r: ScreenRect): ScreenRect => ({ x: r.x / 2, y: r.y / 2, width: r.width / 2, height: r.height / 2 });
+  const snapshot = must(parseSnapshot('{"w":[[1,100,200,600,400]],"d":null,"h":[]}', half));
   assert.deepEqual(snapshot.windows[0], { id: 1, x: 50, y: 100, width: 300, height: 200 });
 });
 

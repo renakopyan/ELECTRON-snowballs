@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Сборка (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [macos-latest, windows-latest]
+    env:
+      HUSKY: 0
+      CSC_IDENTITY_AUTO_DISCOVERY: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Версия тега совпадает с package.json
+        shell: bash
+        run: |
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "$expected" != "$GITHUB_REF_NAME" ]; then
+            echo "Тег $GITHUB_REF_NAME не совпадает с версией в package.json ($expected)"
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npx electron-builder --publish never
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: snow-${{ runner.os }}
+          path: |
+            release/*.dmg
+            release/*.exe
+          if-no-files-found: error
+
+  publish:
+    name: Публикация релиза
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}

@@ -8,16 +8,32 @@
     "build": "tsc && node scripts/build-native.js",
     "start": "npm run build && electron .",
     "watch": "tsc --watch",
-    "typecheck": "tsc --noEmit",
-    "test": "tsc && node --test \"test/*.test.js\"",
-    "dist": "npm run build && electron-builder",
-    "clean": "node -e \"for (const d of ['dist','bin','release']) require('fs').rmSync(d,{recursive:true,force:true})\""
+    "typecheck": "tsc --noEmit && tsc -p test/tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "tsc -p test/tsconfig.json && node --enable-source-maps --test \"dist-test/test/*.test.js\"",
+    "test:coverage": "tsc -p test/tsconfig.json && node --enable-source-maps --experimental-test-coverage --test \"dist-test/test/*.test.js\"",
+    "profile": "npm run build && node scripts/profile.js",
+    "dist": "npm run build && electron-builder --publish never",
+    "dist:dir": "npm run build && electron-builder --dir --publish never",
+    "prepare": "husky",
+    "clean": "node -e \"for (const d of ['dist','dist-test','bin','release','coverage']) require('fs').rmSync(d,{recursive:true,force:true})\""
   },
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
     "@types/node": "^22.0.0",
     "electron": "^33.0.0",
     "electron-builder": "^26.0.12",
-    "typescript": "^5.6.0"
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "globals": "^16.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.0.0"
   },
   "build": {
     "appId": "local.snowapp",
@@ -36,16 +52,36 @@
       "buildResources": "build"
     },
     "mac": {
-      "target": "dir",
+      "target": [
+        "dmg"
+      ],
       "icon": "build/icon.png",
       "category": "public.app-category.entertainment",
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
       "extendInfo": {
         "LSUIElement": true
       }
     },
     "win": {
       "target": "portable",
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+    },
+    "electronFuses": {
+      "runAsNode": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "onlyLoadAppFromAsar": true
     }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "lint-staged": {
+    "*.{ts,js,mjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,html}": "prettier --write"
   }
 }

@@ -1,5 +1,7 @@
 import { app, globalShortcut, powerMonitor } from 'electron';
 import { OverlayManager } from './overlay';
+import { startProfiler } from './profiler';
+import { denyAllPermissions, hardenWebContents } from './security';
 import { SettingsStore } from './settings';
 import { createTray, type TrayMenu } from './tray';
 
@@ -10,8 +12,12 @@ const BATTERY_FRAME_RATE = 30; // от аккумулятора рисуем в�
 let trayMenu: TrayMenu | null = null;
 
 function bootstrap(): void {
+  denyAllPermissions();
+
   // На macOS прячем иконку из Dock, чтобы был чистый фоновой процесс
   if (process.platform === 'darwin') app.dock?.hide();
+
+  startProfiler();
 
   const settings = new SettingsStore();
   const overlays = new OverlayManager(settings.value);
@@ -69,14 +75,20 @@ function bootstrap(): void {
   });
 }
 
+// Закрыть навигацию и новые окна нужно до создания первого окна
+hardenWebContents();
+
 // Второй запуск не должен удваивать снег
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.whenReady().then(bootstrap).catch((error: unknown) => {
-    console.error('Не удалось запустить снег:', error);
-    app.quit();
-  });
+  app
+    .whenReady()
+    .then(bootstrap)
+    .catch((error: unknown) => {
+      console.error('Не удалось запустить снег:', error);
+      app.quit();
+    });
 
   // Окон может временно не остаться (например, при переподключении монитора) —
   // приложение при этом продолжает жить. Выход — через меню в трее или Ctrl+C.

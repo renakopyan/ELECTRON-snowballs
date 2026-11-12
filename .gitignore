@@ -3,3 +3,7 @@ dist/
 bin/
 release/
 .DS_Store
+dist-test/
+coverage/
+*.log
+.env

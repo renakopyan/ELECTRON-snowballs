@@ -1,13 +1,13 @@
 interface Flake {
   x: number;
   y: number;
-  z: number;       // глубина: 0 — далеко (мелкая, бледная, медленная), 1 — близко
+  z: number; // глубина: 0 — далеко (мелкая, бледная, медленная), 1 — близко
   r: number;
   speed: number;
   phase: number;
   swaySpeed: number;
-  lands: boolean;  // ляжет в сугроб или пролетит перед окном
-  star: boolean;   // ближние снежинки рисуются звёздочками
+  lands: boolean; // ляжет в сугроб или пролетит перед окном
+  star: boolean; // ближние снежинки рисуются звёздочками
   angle: number;
   spin: number;
   variant: number;
@@ -24,7 +24,7 @@ interface Particle {
   vy: number;
   r: number;
   area: number;
-  life: number;            // для пыли: 1 → 0
+  life: number; // для пыли: 1 → 0
   sourceId: string | null; // на свою же кромку комок не возвращается
 }
 
@@ -37,16 +37,16 @@ const MAX_FRAME_MS = 100;
 const MAX_PARTICLES = 500;
 const PARTICLE_GRAVITY = 0.14;
 const DUST_LIFETIME_FRAMES = 40;
-const FLAKE_DENSITY = 0.4;                // какая часть объёма снежинки остаётся в сугробе
-const DEPTH_LAYERS = [0.45, 0.75, 1];     // прозрачность дальних, средних и ближних снежинок
-const STAR_SCALE = 2.4;                   // звёздочка крупнее точки того же радиуса
-const SHOVEL_PILE_SCALE = 2.2;            // лопата наваливает кучу выше обычного сугроба
-const SHOVEL_BLADE = 6;                   // лопата чуть впереди курсора, px
-const SHOVEL_BACK = 15;                   // сколько за лопатой подбирается осыпавшегося снега, px
-const SNOWBALL_MELT_PER_SECOND = 0.012;   // какая доля шара тает за секунду
-const SHAKE_SPEED = 9;                    // с какой скорости окна (px за кадр) снег начинает осыпаться
-const SHAKE_TOPPLE_SPEED = 16;            // а с какой — валятся и снеговики
-const SHAKE_MAX_GAP_MS = 150;             // между двумя сценами дольше — скорость не определить
+const FLAKE_DENSITY = 0.4; // какая часть объёма снежинки остаётся в сугробе
+const DEPTH_LAYERS = [0.45, 0.75, 1]; // прозрачность дальних, средних и ближних снежинок
+const STAR_SCALE = 2.4; // звёздочка крупнее точки того же радиуса
+const SHOVEL_PILE_SCALE = 2.2; // лопата наваливает кучу выше обычного сугроба
+const SHOVEL_BLADE = 6; // лопата чуть впереди курсора, px
+const SHOVEL_BACK = 15; // сколько за лопатой подбирается осыпавшегося снега, px
+const SNOWBALL_MELT_PER_SECOND = 0.012; // какая доля шара тает за секунду
+const SHAKE_SPEED = 9; // с какой скорости окна (px за кадр) снег начинает осыпаться
+const SHAKE_TOPPLE_SPEED = 16; // а с какой — валятся и снеговики
+const SHAKE_MAX_GAP_MS = 150; // между двумя сценами дольше — скорость не определить
 
 class Snowfall {
   private readonly ctx: CanvasRenderingContext2D;
@@ -198,7 +198,12 @@ class Snowfall {
       });
     }
     for (let i = 0; i < 6; i++) {
-      this.addDust(drift.left + rand(0, drift.right - drift.left), drift.top - rand(0, 6), rand(-1.5, 1.5), -rand(0.3, 1.5));
+      this.addDust(
+        drift.left + rand(0, drift.right - drift.left),
+        drift.top - rand(0, 6),
+        rand(-1.5, 1.5),
+        -rand(0.3, 1.5),
+      );
     }
   }
 
@@ -266,7 +271,8 @@ class Snowfall {
    */
   private updateInteractive(now: number): void {
     const over =
-      this.settings.drifts && this.pointer !== null &&
+      this.settings.drifts &&
+      this.pointer !== null &&
       this.snowballs.snowmanAt(this.drifts, this.pointer.x, this.pointer.y) !== null;
     if (over === this.interactive && !(over && now - this.interactiveSentAt > 400)) return;
 
@@ -278,8 +284,18 @@ class Snowfall {
 
   private makeFlake(): Flake {
     const flake: Flake = {
-      x: 0, y: 0, z: 0, r: 0, speed: 0, phase: 0, swaySpeed: 0,
-      lands: false, star: false, angle: 0, spin: 0, variant: 0,
+      x: 0,
+      y: 0,
+      z: 0,
+      r: 0,
+      speed: 0,
+      phase: 0,
+      swaySpeed: 0,
+      lands: false,
+      star: false,
+      angle: 0,
+      spin: 0,
+      variant: 0,
     };
     this.recycle(flake);
     flake.y = rand(-this.height, this.height); // при старте снег уже идёт по всему экрану
