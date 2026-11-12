@@ -164,8 +164,9 @@ export class OverlayManager {
     // Клики проходят сквозь снег; forward нужен, чтобы оверлей всё же видел
     // движение курсора и снег можно было смахнуть
     win.setIgnoreMouseEvents(true, { forward: true });
-    // Самый высокий уровень — поверх почти всего
-    win.setAlwaysOnTop(true, 'screen-saver');
+    // На macOS — уровень status: выше обычных окон, Dock и меню-бара, но ниже выпадающих меню,
+    // чтобы снег не ложился поверх меню трея и контекстных меню программ
+    win.setAlwaysOnTop(true, process.platform === 'darwin' ? 'status' : 'screen-saver');
     // Снег виден на всех рабочих столах (macOS Spaces)
     win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
