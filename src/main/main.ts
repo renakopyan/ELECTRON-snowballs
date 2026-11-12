@@ -3,13 +3,13 @@ import { OverlayManager } from './overlay';
 import { startProfiler } from './profiler';
 import { denyAllPermissions, hardenWebContents } from './security';
 import { SettingsStore } from './settings';
-import { createTray, type TrayMenu } from './tray';
+import { SnowTray } from './tray';
 
 const TOGGLE_SHORTCUT = 'CommandOrControl+Alt+Shift+S';
 const BATTERY_FRAME_RATE = 30; // от аккумулятора рисуем вдвое реже
 
 // Ссылку на меню нужно держать, иначе сборщик мусора уберёт иконку из меню-бара
-let trayMenu: TrayMenu | null = null;
+let tray: SnowTray | null = null;
 
 function bootstrap(): void {
   denyAllPermissions();
@@ -25,10 +25,10 @@ function bootstrap(): void {
 
   const setSnowing = (snowing: boolean): void => {
     overlays.setVisible(snowing);
-    trayMenu?.refresh();
+    tray?.refresh();
   };
 
-  trayMenu = createTray({
+  tray = new SnowTray({
     getState: () => ({
       snowing: overlays.visible,
       settings: settings.value,
@@ -39,7 +39,7 @@ function bootstrap(): void {
     onSettings: (patch) => settings.update(patch),
     onOpenAtLogin: (enabled) => {
       app.setLoginItemSettings({ openAtLogin: enabled });
-      trayMenu?.refresh();
+      tray?.refresh();
     },
     onClear: () => overlays.clearDrifts(),
     onPlow: () => overlays.callPlow(),
@@ -49,7 +49,7 @@ function bootstrap(): void {
 
   settings.onChange((value) => {
     overlays.setSettings(value);
-    trayMenu?.refresh();
+    tray?.refresh();
   });
 
   if (!globalShortcut.register(TOGGLE_SHORTCUT, () => setSnowing(!overlays.visible))) {
@@ -71,7 +71,7 @@ function bootstrap(): void {
   app.on('before-quit', () => {
     globalShortcut.unregisterAll();
     overlays.dispose();
-    trayMenu?.destroy();
+    tray?.destroy();
   });
 }
 
