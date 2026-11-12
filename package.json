@@ -2,6 +2,7 @@
   "name": "snowapp",
   "version": "1.0.1",
   "description": "Снег поверх рабочего стола (Mac/Windows) на Electron + TypeScript",
+  "license": "MIT",
   "private": true,
   "main": "dist/main/main.js",
   "scripts": {
