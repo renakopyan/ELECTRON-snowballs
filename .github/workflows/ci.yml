@@ -23,6 +23,7 @@ jobs:
     env:
       HUSKY: 0
       CSC_IDENTITY_AUTO_DISCOVERY: false
+      SNOW_REQUIRE_NATIVE: 1
     steps:
       - uses: actions/checkout@v4
 
@@ -35,8 +36,8 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck
-      - run: npm test
       - run: npm run build
+      - run: npm test
 
       # Упаковка без подписи: проверяем, что electron-builder и fuses отрабатывают на этой ОС
       - name: Упаковка

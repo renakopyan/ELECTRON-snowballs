@@ -18,6 +18,7 @@ jobs:
     env:
       HUSKY: 0
       CSC_IDENTITY_AUTO_DISCOVERY: false
+      SNOW_REQUIRE_NATIVE: 1
     steps:
       - uses: actions/checkout@v4
 
@@ -36,8 +37,8 @@ jobs:
           fi
 
       - run: npm ci
-      - run: npm test
       - run: npm run build
+      - run: npm test
       - run: npx electron-builder --publish never
 
       - uses: actions/upload-artifact@v4

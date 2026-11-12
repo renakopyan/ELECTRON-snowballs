@@ -62,9 +62,6 @@ for (var i = 0; i < ${JXA_POLLS_PER_RUN}; i++) {
 }
 `;
 
-// ---------- Windows: PowerShell + WinAPI ----------
-// EnumWindows отдаёт окна от переднего к заднему. Координаты — в физических
-// пикселях, в экранные точки их переводит toDip ниже.
 const POWERSHELL_SCRIPT = `
 $ErrorActionPreference = 'Stop'
 $source = @"
@@ -134,13 +131,15 @@ while ($true) {
 `;
 
 interface Helper {
+  name: string;
   command: string;
   args: string[];
-  /** Переводит координаты помощника в экранные точки Electron */
   toDip: (rect: ScreenRect) => ScreenRect;
+  fallback?: Helper;
 }
 
 const JXA_HELPER: Helper = {
+  name: 'osascript',
   command: 'osascript',
   args: ['-l', 'JavaScript', '-e', JXA_SCRIPT],
   toDip: identity,
@@ -148,27 +147,44 @@ const JXA_HELPER: Helper = {
 
 const EMPTY_SNAPSHOT: ScreenSnapshot = { windows: [], dock: null, hidden: [] };
 
+function nativeBinary(name: string): string | null {
+  const binary = path.join(app.getAppPath(), 'bin', name).replace('app.asar', 'app.asar.unpacked');
+  return fs.existsSync(binary) ? binary : null;
+}
+
+function powerShellHelper(): Helper {
+  const script = POWERSHELL_SCRIPT.replace('__PARENT_PID__', String(process.pid));
+  return {
+    name: 'PowerShell',
+    command: 'powershell.exe',
+    args: [
+      '-NoProfile',
+      '-NonInteractive',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-EncodedCommand',
+      Buffer.from(script, 'utf16le').toString('base64'),
+    ],
+    toDip: (rect) => screen.screenToDipRect(null, rect),
+  };
+}
+
 function pickHelper(): Helper | null {
   if (process.platform === 'darwin') {
-    // В собранном приложении бинарник лежит рядом с app.asar, а не внутри него
-    const binary = path.join(app.getAppPath(), 'bin', 'window-tracker').replace('app.asar', 'app.asar.unpacked');
-    if (fs.existsSync(binary)) return { command: binary, args: [], toDip: identity };
-    return JXA_HELPER;
+    const binary = nativeBinary('window-tracker');
+    if (!binary) return JXA_HELPER;
+    return { name: 'нативный помощник', command: binary, args: [], toDip: identity, fallback: JXA_HELPER };
   }
 
   if (process.platform === 'win32') {
-    const script = POWERSHELL_SCRIPT.replace('__PARENT_PID__', String(process.pid));
+    const binary = nativeBinary('window-tracker.exe');
+    if (!binary) return powerShellHelper();
     return {
-      command: 'powershell.exe',
-      args: [
-        '-NoProfile',
-        '-NonInteractive',
-        '-ExecutionPolicy',
-        'Bypass',
-        '-EncodedCommand',
-        Buffer.from(script, 'utf16le').toString('base64'),
-      ],
+      name: 'нативный помощник',
+      command: binary,
+      args: [String(process.pid)],
       toDip: (rect) => screen.screenToDipRect(null, rect),
+      fallback: powerShellHelper(),
     };
   }
 
@@ -177,7 +193,7 @@ function pickHelper(): Helper | null {
 
 /**
  * Следит за окнами других программ, чтобы снег мог ложиться на их кромки.
- * macOS — нативный помощник (или osascript, если он не собран), Windows — PowerShell.
+ * macOS и Windows — нативный помощник; если он не собран или не работает — osascript или PowerShell.
  * Если помощник не запускается, снег копится только внизу экрана.
  */
 export class WindowTracker {
@@ -234,10 +250,10 @@ export class WindowTracker {
       this.child = null;
 
       this.quickFailures = Date.now() - startedAt < MIN_HEALTHY_RUN_MS ? this.quickFailures + 1 : 0;
-      if (this.quickFailures >= MAX_QUICK_FAILURES && process.platform === 'darwin' && helper !== JXA_HELPER) {
-        console.warn('Нативный помощник не работает — перехожу на osascript.', errorOutput.trim());
+      if (this.quickFailures >= MAX_QUICK_FAILURES && helper.fallback) {
+        console.warn(`${helper.name} не работает — перехожу на ${helper.fallback.name}.`, errorOutput.trim());
         this.quickFailures = 0;
-        this.spawnHelper(JXA_HELPER);
+        this.spawnHelper(helper.fallback);
         return;
       }
       if (this.quickFailures >= MAX_QUICK_FAILURES) {
