@@ -71,7 +71,8 @@
       "runAsNode": false,
       "enableNodeOptionsEnvironmentVariable": false,
       "enableNodeCliInspectArguments": false,
-      "onlyLoadAppFromAsar": true
+      "onlyLoadAppFromAsar": true,
+      "resetAdHocDarwinSignature": true
     }
   },
   "engines": {
