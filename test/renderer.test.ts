@@ -321,23 +321,21 @@ function movedWindow(dx: number): SnowScene {
   return scene;
 }
 
-test('окно резко дёрнули — снег с него сыплется вниз', () => {
+test('резкие движения сохраняют снег и снеговика на окне', () => {
   const r = setup({ intensity: 'thaw' });
   r.snowfall.config.meltPerSecond = 0;
   const drift = driftOf(r, 'window-1');
   fill(drift, 310, 690, 300);
   r.run(0.3);
+  r.snowfall.snowballs.piles.push({ driftId: 'window-1', offset: 200, areas: [1500, 800, 400] });
   const before = drift.volume;
-  const ground = volume(r, 'ground') + volume(r, 'window-2');
-
-  r.bridge.scene(twoWindowsScene()); // окно стоит: сцены идут каждые ~33 мс, пока его тащат
-  r.run(0.05);
-  r.bridge.scene(movedWindow(200)); // 200 px за ~3 кадра
-  assert.ok(drift.volume < before * 0.3, `осталось ${drift.volume.toFixed(0)} из ${before.toFixed(0)}`);
-  assert.ok(r.snowfall.particles.length > 5, 'снег летит вниз');
-
-  r.run(4);
-  assert.ok(volume(r, 'ground') + volume(r, 'window-2') > ground + before * 0.3, 'упал на окно ниже и на землю');
+  for (const dx of [200, -100, 300, 0]) {
+    r.bridge.scene(movedWindow(dx));
+    r.run(0.05);
+    assert.equal(drift.volume, before);
+    assert.equal(r.snowfall.snowballs.pileCount, 1);
+    assert.equal(must(r.snowfall.snowballs.piles[0]).offset, 200);
+  }
 });
 
 test('окно двигают плавно — снег лежит', () => {
@@ -354,7 +352,7 @@ test('окно двигают плавно — снег лежит', () => {
   assert.ok(drift.volume > before * 0.95, `${drift.volume.toFixed(0)} из ${before.toFixed(0)}`);
 });
 
-test('очень резкий рывок роняет и снеговика', () => {
+test('очень резкий рывок сохраняет снеговика', () => {
   const r = setup({ intensity: 'thaw' });
   r.snowfall.snowballs.piles.push({ driftId: 'window-1', offset: 200, areas: [1500, 800, 400] });
   r.run(0.3);
@@ -362,7 +360,7 @@ test('очень резкий рывок роняет и снеговика', ()
   r.bridge.scene(twoWindowsScene());
   r.run(0.05);
   r.bridge.scene(movedWindow(300));
-  assert.equal(r.snowfall.snowballs.pileCount, 0);
+  assert.equal(r.snowfall.snowballs.pileCount, 1);
 });
 
 test('первое появление окна и скачок после паузы снег не стряхивают', () => {
@@ -374,4 +372,61 @@ test('первое появление окна и скачок после пау
   r.run(2); // сцена давно не приходила
   r.bridge.scene(movedWindow(400)); // окно «перескочило» (например, на другой стол)
   assert.ok(drift.volume > before * 0.95);
+});
+
+test('живой снеговик следит за курсором, машет и спит на скрытом окне', () => {
+  const r = setup({ intensity: 'light' });
+  const pile = { driftId: 'window-1', offset: 180, areas: [1200, 600], life: { wait: 0, wave: 0, lookX: 0, lookY: 0 } };
+  r.snowfall.snowballs.piles.push(pile);
+  r.pointer(900, 100);
+  assert.ok(pile.life.wave > 0);
+  r.run(1);
+  assert.ok(pile.life.lookX > 0.9);
+  const away = twoWindowsScene({ keep: ['window-1'] });
+  away.surfaces = away.surfaces.filter((surface) => surface.id !== 'window-1');
+  r.bridge.scene(away);
+  const wait = pile.life.wait;
+  r.run(2);
+  assert.equal(pile.life.wait, wait);
+});
+
+test('попадание снежка сердит снеговика, затем он успокаивается', () => {
+  const r = setup({ intensity: 'light' });
+  r.snowfall.snowballs.piles.push({ driftId: 'window-1', offset: 180, areas: [1200, 600] });
+  const pile = must(r.snowfall.snowballs.piles[0]);
+  r.snowfall.snowballs.flying.push({ x: 488, y: 175, vx: 0, vy: 0, area: 25, age: 0 });
+  r.run(0.05);
+  assert.ok(pile.anger?.phrase);
+  assert.ok((r.stats['fillText'] ?? 0) > 0, 'снеговик показывает реплику');
+  assert.equal(r.snowfall.snowballs.flyingCount, 0);
+  r.run(3);
+  assert.equal(pile.anger, undefined);
+});
+
+test('три попадания подряд вызывают бросок в зрителя, эффект исчезает', () => {
+  const r = setup({ intensity: 'light' });
+  r.snowfall.snowballs.piles.push({ driftId: 'window-1', offset: 180, areas: [1200, 600] });
+  const balls = r.snowfall.snowballs;
+  const hit = (): void => {
+    balls.flying.push({ x: 488, y: 175, vx: 0, vy: 0, area: 25, age: 0 });
+    r.run(1 / 60);
+  };
+  hit();
+  hit();
+  assert.equal(balls.retaliation, null);
+  hit();
+  assert.ok(balls.retaliation);
+  r.run(4);
+  assert.equal(balls.retaliation, null);
+});
+
+test('промах сбрасывает серию попаданий в снеговика', () => {
+  const r = setup({ intensity: 'light' });
+  const balls = r.snowfall.snowballs;
+  balls.piles.push({ driftId: 'window-1', offset: 180, areas: [1200, 600] });
+  for (const x of [488, 488, -20, 488]) {
+    balls.flying.push({ x, y: 175, vx: 0, vy: 0, area: 25, age: 0 });
+    r.run(1 / 60);
+  }
+  assert.equal(balls.retaliation, null);
 });

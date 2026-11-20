@@ -150,7 +150,7 @@ export function computeScene(
 ): SnowScene {
   return {
     surfaces: computeSurfaces(bounds, workArea, snapshot, platform),
-    keep: snapshot.hidden.map((id) => `window-${id}`),
+    keep: [...new Set([...snapshot.hidden, ...snapshot.windows.map((win) => win.id)])].map((id) => `window-${id}`),
     windows: snapshot.windows
       .filter((win) => intersects(win, bounds))
       .map((win) => ({ x: win.x - bounds.x, y: win.y - bounds.y, width: win.width, height: win.height })),

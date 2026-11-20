@@ -65,7 +65,7 @@ test('сцена: скрытые окна попадают в keep, окна ч�
   const second: ScreenRect = { x: 1440, y: 0, width: 1920, height: 1080 };
   const wins: TrackedWindow[] = [...windows, { id: 9, x: 1500, y: 100, width: 400, height: 300 }];
   const scene = computeScene(bounds, macWorkArea, { windows: wins, dock: null, hidden: [5, 6] }, 'darwin');
-  assert.deepEqual(scene.keep, ['window-5', 'window-6']);
+  assert.deepEqual(scene.keep, ['window-5', 'window-6', 'window-1', 'window-2', 'window-9']);
   assert.equal(scene.windows.length, 2);
   assert.equal(scene.topInset, 25);
 
@@ -77,4 +77,15 @@ test('сцена: скрытые окна попадают в keep, окна ч�
 test('полноэкранное окно распознаётся', () => {
   assert.equal(isCoveredByFullscreenWindow(bounds, windows), false);
   assert.equal(isCoveredByFullscreenWindow(bounds, [{ x: 0, y: 0, width: 1440, height: 900 }]), true);
+});
+
+test('окно у строки меню сохраняется, даже когда его кромка не рисуется', () => {
+  const snapshot: ScreenSnapshot = {
+    windows: [{ id: 1, x: 100, y: 25, width: 600, height: 400 }],
+    dock: null,
+    hidden: [],
+  };
+  const scene = computeScene(bounds, macWorkArea, snapshot, 'darwin');
+  assert.ok(!scene.surfaces.some((surface) => surface.id === 'window-1'));
+  assert.ok(scene.keep.includes('window-1'));
 });

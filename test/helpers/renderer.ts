@@ -23,11 +23,15 @@ export interface PileProbe {
   offset: number;
   areas: number[];
   poke?: { kind: string };
+  anger?: { remaining: number; phrase: string };
+  life?: { wait: number; wave: number; lookX: number; lookY: number };
 }
 
 export interface SnowballsProbe {
+  retaliation: { age: number } | null;
   pileCount: number;
   flyingCount: number;
+  flying: Array<{ x: number; y: number; vx: number; vy: number; area: number; age: number }>;
   splatCount: number;
   pokeCount: number;
   volume: number;
@@ -109,6 +113,7 @@ function fakeContext(stats: Record<string, number>): Record<string, unknown> {
     translate: finite('translate'),
     clearRect: finite('clearRect'),
     fillRect: finite('fillRect'),
+    fillText: finite('fillText'),
     beginPath: finite('beginPath'),
     closePath: finite('closePath'),
     moveTo: finite('moveTo'),

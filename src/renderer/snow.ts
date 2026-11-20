@@ -44,9 +44,6 @@ const SHOVEL_PILE_SCALE = 2.2; // лопата наваливает кучу в�
 const SHOVEL_BLADE = 6; // лопата чуть впереди курсора, px
 const SHOVEL_BACK = 15; // сколько за лопатой подбирается осыпавшегося снега, px
 const SNOWBALL_MELT_PER_SECOND = 0.012; // какая доля шара тает за секунду
-const SHAKE_SPEED = 9; // с какой скорости окна (px за кадр) снег начинает осыпаться
-const SHAKE_TOPPLE_SPEED = 16; // а с какой — валятся и снеговики
-const SHAKE_MAX_GAP_MS = 150; // между двумя сценами дольше — скорость не определить
 
 class Snowfall {
   private readonly ctx: CanvasRenderingContext2D;
@@ -73,8 +70,6 @@ class Snowfall {
   /** Окно сейчас ловит клики (курсор над снеговиком); иначе клики проходят сквозь снег */
   private interactive = false;
   private interactiveSentAt = 0;
-  /** Время кадра, на котором пришла прошлая сцена: по нему считаем, как быстро двигают окна */
-  private sceneAt: number | null = null;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -128,8 +123,6 @@ class Snowfall {
 
   /** Главный процесс сообщил, где сейчас окна, их кромки и низ экрана */
   setScene(scene: SnowScene): void {
-    const gap = this.sceneAt !== null && this.lastTime !== null ? this.lastTime - this.sceneAt : 0;
-    this.sceneAt = this.lastTime ?? 0;
     this.windows = scene.windows;
     this.topInset = scene.topInset;
     if (!this.settings.drifts) return;
@@ -141,7 +134,6 @@ class Snowfall {
       // Окно вернулось с другого рабочего стола или развернулось — вместе со своим снегом
       const drift = this.drifts.get(surface.id) ?? this.dormant.get(surface.id);
       if (drift) {
-        if (surface.kind === 'window' && this.drifts.get(surface.id) === drift) this.shakeIfJerked(drift, surface, gap);
         drift.setSurface(surface);
         this.dormant.delete(surface.id);
         this.drifts.set(surface.id, drift);
@@ -169,41 +161,6 @@ class Snowfall {
       if (keep.has(id) || alive.has(id)) continue;
       this.dormant.delete(id);
       this.snowballs.forget(id);
-    }
-  }
-
-  /** Окно быстро двигают — снег не успевает за ним и сыплется вниз */
-  private shakeIfJerked(drift: Drift, surface: SnowSurface, gapMs: number): void {
-    if (gapMs < 8 || gapMs > SHAKE_MAX_GAP_MS) return;
-    const frames = gapMs / BASE_FRAME_MS;
-    const vx = (surface.x - drift.left) / frames;
-    const vy = (surface.y - drift.top) / frames;
-    const speed = Math.hypot(vx, vy);
-    if (speed < SHAKE_SPEED) return;
-
-    // Совсем резкий рывок — снеговики и шары тоже валятся
-    if (speed >= SHAKE_TOPPLE_SPEED) this.snowballs.dropAll(drift);
-
-    const fraction = clamp(0.25 + (speed - SHAKE_SPEED) / 30, 0.25, 0.9);
-    for (const chunk of drift.shake(fraction)) {
-      this.addParticle({
-        x: chunk.x,
-        y: chunk.y,
-        vx: clamp(-vx * 0.15, -4, 4) + rand(-1, 1),
-        vy: clamp(-vy * 0.15, -3, 3) - rand(0, 1.5),
-        r: clamp(Math.sqrt(chunk.area / Math.PI) * 0.7, 1.2, 5),
-        area: chunk.area,
-        life: 1,
-        sourceId: drift.id,
-      });
-    }
-    for (let i = 0; i < 6; i++) {
-      this.addDust(
-        drift.left + rand(0, drift.right - drift.left),
-        drift.top - rand(0, 6),
-        rand(-1.5, 1.5),
-        -rand(0.3, 1.5),
-      );
     }
   }
 
@@ -574,6 +531,7 @@ class Snowfall {
     ctx.fill();
 
     this.frost.draw(ctx, this.width, this.height);
+    this.snowballs.drawRetaliation(ctx);
   }
 
   /** Иней нарастает в метель и тает в штиль и оттепель */
@@ -605,6 +563,7 @@ class Snowfall {
       width: this.width,
       height: this.height,
       windows: this.windows,
+      pointer: this.pointer,
       drifts: this.drifts,
     });
     this.updatePlow(frames);
